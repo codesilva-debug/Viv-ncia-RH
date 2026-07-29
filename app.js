@@ -112,19 +112,18 @@ function aplicarMascaraTelefone(e) {
 
 function gerarMensagemWhatsApp() {
     const cargo = formElements.vagaCargo.value.trim();
-    const unidade = formElements.unidadeSolicitante.value.trim();
     const horario = formElements.horarioVaga.value.trim();
-    const unidadeVivencia = formElements.unidadeVivencia.value.trim();
+    const unidade = formElements.unidadeSolicitante.value.trim();
     const data = formatarDataBR(formElements.dataVivencia.value);
     const periodo = formElements.periodoTeste.value.trim();
     const nome = formElements.nomeCandidato.value.trim();
-    const telefone = formElements.telefone.value.trim();
+    const emailContato = formElements.telefone.value.trim();
 
     if (!cargo && !unidade && !nome) {
         return "Preencha os campos do formulário para gerar o resumo do WhatsApp...";
     }
 
-    return `${cargo.toUpperCase()} ${unidade.toUpperCase()} ${horario.toUpperCase()} - TESTE ${unidadeVivencia.toUpperCase()} DIA ${data} DAS ${periodo.toUpperCase()} - ${nome} - ${telefone}`;
+    return `${cargo.toUpperCase()} ${horario.toUpperCase()} ${unidade.toUpperCase()} - Vivência em ${data} - ${periodo.toUpperCase()} - ${nome} - ${emailContato}`;
 }
 
 function atualizarPreviewWhatsApp() {
@@ -235,9 +234,9 @@ async function gerarPDF() {
     pdf.text(nome, startXCol1 + 35, rowY);
 
     pdf.setFont("Helvetica", "bold");
-    pdf.text("Telefone:", startXCol2, rowY);
+    pdf.text("E-mail / Contato:", startXCol2, rowY);
     pdf.setFont("Helvetica", "normal");
-    pdf.text(telefone, startXCol2 + 18, rowY);
+    pdf.text(telefone, startXCol2 + 30, rowY);
 
     // Linha 2
     rowY += 8;
@@ -358,9 +357,6 @@ document.addEventListener("DOMContentLoaded", () => {
             formElements[key].addEventListener("change", salvarDados);
         }
     }
-
-    // Máscara de Telefone
-    formElements.telefone.addEventListener("input", aplicarMascaraTelefone);
 
     // Botões
     btnCopyWhats.addEventListener("click", copiarWhatsApp);

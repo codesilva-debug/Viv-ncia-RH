@@ -101,40 +101,14 @@ function obterDado(campoSemDoisPontos) {
 
 
 function gerarMensagem(){
+    const cargo = obterDado("Vaga/Cargo");
+    const unidade = obterDado("Unidade solicitante");
+    const data = formatarData(obterDado("Data Vivência") || obterDado("Data da Vivência"));
+    const periodo = obterDado("Período teste") || obterDado("Período do teste");
+    const nome = obterDado("Nome do Candidato");
+    const emailContato = obterDado("E-mail / Contato") || obterDado("E-mail") || obterDado("Telefone");
 
-
-    const cargo =
-    obterDado("Vaga/Cargo");
-
-
-    const unidade =
-    obterDado("Unidade solicitante");
-
-
-    const unidadeVivencia =
-    obterDado("Unidade da Vivência");
-
-
-    const data =
-    formatarData(
-        obterDado("Data Vivência") || obterDado("Data da Vivência")
-    );
-
-
-    const periodo =
-    obterDado("Período teste") || obterDado("Período do teste");
-
-
-    const nome =
-    obterDado("Nome do Candidato");
-
-
-    const telefone =
-    obterDado("Telefone");
-
-
-    return `${cargo.toUpperCase()} ${unidade.toUpperCase()} ${horarioVaga.toUpperCase()} - TESTE ${unidadeVivencia.toUpperCase()} DIA ${data} DAS ${periodo.toUpperCase()} - ${nome} - ${telefone}`;
-
+    return `${cargo.toUpperCase()} ${horarioVaga.toUpperCase()} ${unidade.toUpperCase()} - Vivência em ${data} - ${periodo.toUpperCase()} - ${nome} - ${emailContato}`;
 }
 
 
@@ -408,9 +382,9 @@ async function gerarPDF(){
     pdf.text(nome, startXCol1 + 35, rowY);
 
     pdf.setFont("Helvetica", "bold");
-    pdf.text("Telefone:", startXCol2, rowY);
+    pdf.text("E-mail / Contato:", startXCol2, rowY);
     pdf.setFont("Helvetica", "normal");
-    pdf.text(telefone, startXCol2 + 18, rowY);
+    pdf.text(telefone, startXCol2 + 30, rowY);
 
     // Row 2
     rowY += 8;
