@@ -179,6 +179,7 @@ async function gerarPDF() {
     const unidadeVivencia = formElements.unidadeVivencia.value.trim();
     const data = formatarDataBR(formElements.dataVivencia.value);
     const periodo = formElements.periodoTeste.value.trim();
+    const horarioVaga = formElements.horarioVaga ? formElements.horarioVaga.value.trim() : "";
     const anamnese = formElements.anamnese.value.trim();
 
     if (!nome || !cargo || !unidade) {
@@ -215,61 +216,139 @@ async function gerarPDF() {
 
     currentY += 8;
 
-    // 3. Bloco de Informações do Candidato (Card com fundo claro)
+    // 3. Bloco de Informações do Candidato (Card Dinâmico com auto-ajuste)
+    const cardStartY = currentY;
+    const col1X = 24;
+    const col1MaxX = 103;
+    const col1AvailW = col1MaxX - col1X; // 79mm
+
+    const col2X = 107;
+    const col2MaxX = 186;
+    const col2AvailW = col2MaxX - col2X; // 79mm
+
+    // Função para medir e ajustar texto do campo (evita que vazamentos e sobreposições ocorram)
+    function measureField(label, value, availW) {
+        const labelText = label + ": ";
+        pdf.setFont("Helvetica", "bold");
+        pdf.setFontSize(9.5);
+        const labelWidth = pdf.getTextWidth(labelText);
+        const valAvailW = Math.max(availW - labelWidth - 1, 20);
+
+        const valStr = value || "—";
+        pdf.setFont("Helvetica", "normal");
+
+        let fontSize = 9.5;
+        pdf.setFontSize(fontSize);
+
+        let w = pdf.getTextWidth(valStr);
+        while (fontSize > 7.5 && w > valAvailW) {
+            fontSize -= 0.5;
+            pdf.setFontSize(fontSize);
+            w = pdf.getTextWidth(valStr);
+        }
+
+        if (w <= valAvailW) {
+            return { fontSize, lines: [valStr], height: 5.5, labelWidth };
+        }
+
+        fontSize = 8.5;
+        pdf.setFontSize(fontSize);
+        let rawLines = pdf.splitTextToSize(valStr, valAvailW);
+        let lines = [];
+        for (let line of rawLines) {
+            if (pdf.getTextWidth(line) > valAvailW) {
+                let chunk = "";
+                for (let char of line) {
+                    if (pdf.getTextWidth(chunk + char) > valAvailW) {
+                        lines.push(chunk);
+                        chunk = char;
+                    } else {
+                        chunk += char;
+                    }
+                }
+                if (chunk) lines.push(chunk);
+            } else {
+                lines.push(line);
+            }
+        }
+        return { fontSize, lines, height: lines.length * 4.5 + 1, labelWidth };
+    }
+
+    function drawField(label, measured, x, y) {
+        const labelText = label + ": ";
+        pdf.setFont("Helvetica", "bold");
+        pdf.setFontSize(9.5);
+        pdf.setTextColor(40, 40, 40);
+        pdf.text(labelText, x, y);
+
+        const valX = x + measured.labelWidth + 1;
+
+        pdf.setFont("Helvetica", "normal");
+        pdf.setFontSize(measured.fontSize);
+        pdf.setTextColor(60, 60, 60);
+
+        let lineY = y;
+        for (let i = 0; i < measured.lines.length; i++) {
+            pdf.text(measured.lines[i], valX, lineY);
+            if (i < measured.lines.length - 1) {
+                lineY += 4.5;
+            }
+        }
+    }
+
+    // Definir as 4 linhas de pares de campos
+    const rowsData = [
+        {
+            left: { label: "Nome do Candidato", value: nome },
+            right: { label: "E-mail / Contato", value: telefone }
+        },
+        {
+            left: { label: "Vaga/Cargo", value: cargo },
+            right: { label: "Unidade Solicitante", value: unidade }
+        },
+        {
+            left: { label: "Data da Vivência", value: data },
+            right: { label: "Período do Teste", value: periodo }
+        },
+        {
+            left: { label: "Unidade da Vivência", value: unidadeVivencia },
+            right: { label: "Horário da Vaga", value: horarioVaga }
+        }
+    ];
+
+    // Calcular medidas de todos os campos e alturas de cada linha
+    const computedRows = rowsData.map(row => {
+        const mLeft = measureField(row.left.label, row.left.value, col1AvailW);
+        const mRight = measureField(row.right.label, row.right.value, col2AvailW);
+        const rowHeight = Math.max(mLeft.height, mRight.height, 6);
+        return { left: row.left, mLeft, right: row.right, mRight, rowHeight };
+    });
+
+    // Calcular altura total do Card
+    let totalContentHeight = 6; // Padding topo
+    computedRows.forEach((r, idx) => {
+        totalContentHeight += r.rowHeight;
+        if (idx < computedRows.length - 1) totalContentHeight += 2.5; // Gap entre linhas
+    });
+    totalContentHeight += 5; // Padding fundo
+
+    const cardHeight = Math.max(totalContentHeight, 42);
+
+    // Desenhar Card (fundo e borda)
     pdf.setDrawColor(220, 224, 230);
     pdf.setFillColor(248, 249, 250);
-    pdf.roundedRect(20, currentY, 170, 42, 3, 3, "FD");
+    pdf.roundedRect(20, cardStartY, 170, cardHeight, 3, 3, "FD");
 
-    pdf.setFontSize(10);
-    pdf.setTextColor(60, 60, 60);
+    // Renderizar o texto dos campos dentro do Card
+    let rY = cardStartY + 6.5;
+    computedRows.forEach((r, idx) => {
+        drawField(r.left.label, r.mLeft, col1X, rY);
+        drawField(r.right.label, r.mRight, col2X, rY);
+        rY += r.rowHeight;
+        if (idx < computedRows.length - 1) rY += 2.5;
+    });
 
-    const startXCol1 = 24;
-    const startXCol2 = 114;
-
-    // Linha 1
-    let rowY = currentY + 7;
-    pdf.setFont("Helvetica", "bold");
-    pdf.text("Nome do Candidato:", startXCol1, rowY);
-    pdf.setFont("Helvetica", "normal");
-    pdf.text(nome, startXCol1 + 35, rowY);
-
-    pdf.setFont("Helvetica", "bold");
-    pdf.text("E-mail / Contato:", startXCol2, rowY);
-    pdf.setFont("Helvetica", "normal");
-    pdf.text(telefone, startXCol2 + 30, rowY);
-
-    // Linha 2
-    rowY += 8;
-    pdf.setFont("Helvetica", "bold");
-    pdf.text("Vaga/Cargo:", startXCol1, rowY);
-    pdf.setFont("Helvetica", "normal");
-    pdf.text(cargo, startXCol1 + 22, rowY);
-
-    pdf.setFont("Helvetica", "bold");
-    pdf.text("Unidade Solicitante:", startXCol2, rowY);
-    pdf.setFont("Helvetica", "normal");
-    pdf.text(unidade, startXCol2 + 35, rowY);
-
-    // Linha 3
-    rowY += 8;
-    pdf.setFont("Helvetica", "bold");
-    pdf.text("Data da Vivência:", startXCol1, rowY);
-    pdf.setFont("Helvetica", "normal");
-    pdf.text(data, startXCol1 + 32, rowY);
-
-    pdf.setFont("Helvetica", "bold");
-    pdf.text("Período do Teste:", startXCol2, rowY);
-    pdf.setFont("Helvetica", "normal");
-    pdf.text(periodo, startXCol2 + 32, rowY);
-
-    // Linha 4
-    rowY += 8;
-    pdf.setFont("Helvetica", "bold");
-    pdf.text("Unidade da Vivência:", startXCol1, rowY);
-    pdf.setFont("Helvetica", "normal");
-    pdf.text(unidadeVivencia, startXCol1 + 38, rowY);
-
-    currentY += 42 + 10;
+    currentY += cardHeight + 10;
 
     // 4. Seção Anamnese
     pdf.setFont("Helvetica", "bold");
@@ -288,9 +367,28 @@ async function gerarPDF() {
     pdf.setFontSize(10);
     pdf.setTextColor(50, 50, 50);
 
-    const linhasAnamnese = pdf.splitTextToSize(anamnese || "Nenhuma anamnese registrada.", 160);
+    const maxAnamneseW = 160;
+    const rawAnamneseLines = pdf.splitTextToSize(anamnese || "Nenhuma anamnese registrada.", maxAnamneseW);
+    const linhasAnamnese = [];
+    for (let line of rawAnamneseLines) {
+        if (pdf.getTextWidth(line) > maxAnamneseW) {
+            let chunk = "";
+            for (let char of line) {
+                if (pdf.getTextWidth(chunk + char) > maxAnamneseW) {
+                    linhasAnamnese.push(chunk);
+                    chunk = char;
+                } else {
+                    chunk += char;
+                }
+            }
+            if (chunk) linhasAnamnese.push(chunk);
+        } else {
+            linhasAnamnese.push(line);
+        }
+    }
+
     const totalLinhas = linhasAnamnese.length;
-    const alturaTexto = totalLinhas * 5.5;
+    const alturaTexto = totalLinhas * 5;
     const alturaBox = alturaTexto + 8;
 
     pdf.setDrawColor(235, 238, 242);
@@ -299,7 +397,7 @@ async function gerarPDF() {
 
     pdf.text(linhasAnamnese, 25, currentY + 6.5);
 
-    currentY += alturaBox + 12;
+    currentY += alturaBox + 10;
 
     // Verificação de quebra de página
     function checkNewPage(neededHeight) {
