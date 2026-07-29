@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Vivência RH Automação",
+  "version": "1.0.0",
+  "description": "Automação de encaminhamento de vivências pelo Google Forms",
+
+  "permissions": [
+    "clipboardWrite"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://docs.google.com/forms/d/1QcD7U4ShLcLURnSiXW5jaq41Xdvf13VaFv-iHzQBKnU*"
+      ],
+      "js": [
+        "node_modules/jspdf/dist/jspdf.umd.min.js",
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup.html"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "Fadelito-esc-Completo-Horizontal-md.png"
+      ],
+      "matches": [
+        "https://docs.google.com/*"
+      ]
+    }
+  ]
+}

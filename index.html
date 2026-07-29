@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivência RH - Encaminhamento de Candidatos</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilos do App -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- jsPDF CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header Principal -->
+        <header class="app-header">
+            <div class="header-brand">
+                <img src="Fadelito-esc-Completo-Horizontal-md.png" alt="Fadelito Logo" class="brand-logo" id="headerLogo">
+                <div class="brand-info">
+                    <h1>Encaminhamento para Vivência</h1>
+                    <p>Gestão de Recrutamento & Seleção - Fadelito</p>
+                </div>
+            </div>
+            <div class="header-status">
+                <span class="save-badge" id="saveBadge">
+                    <i class="fa-solid fa-cloud-check"></i> Salvo automaticamente
+                </span>
+                <button type="button" class="btn-clear" id="btnClearForm" title="Limpar formulário e iniciar nova vivência">
+                    <i class="fa-solid fa-rotate-left"></i> Nova Vivência
+                </button>
+            </div>
+        </header>
+
+        <!-- Conteúdo Principal Dividido -->
+        <main class="app-content">
+            <!-- Coluna 1: Formulário de Dados -->
+            <section class="form-card">
+                <div class="card-title">
+                    <i class="fa-solid fa-user-pen"></i>
+                    <h2>Dados da Vivência</h2>
+                </div>
+
+                <form id="vivenciaForm" onsubmit="event.preventDefault();">
+                    <div class="form-grid">
+                        <!-- Nome do Candidato -->
+                        <div class="form-group col-span-2">
+                            <label for="nomeCandidato">Nome Completo do Candidato *</label>
+                            <input type="text" id="nomeCandidato" placeholder="Ex: Maria Silva Sauro" required>
+                        </div>
+
+                        <!-- Telefone -->
+                        <div class="form-group">
+                            <label for="telefone">Telefone / WhatsApp *</label>
+                            <input type="tel" id="telefone" placeholder="(11) 99999-9999" required>
+                        </div>
+
+                        <!-- Vaga / Cargo -->
+                        <div class="form-group">
+                            <label for="vagaCargo">Vaga / Cargo *</label>
+                            <input type="text" id="vagaCargo" placeholder="Ex: Auxiliar de Classe" required>
+                        </div>
+
+                        <!-- Unidade Solicitante -->
+                        <div class="form-group">
+                            <label for="unidadeSolicitante">Unidade Solicitante *</label>
+                            <input type="text" id="unidadeSolicitante" placeholder="Ex: Vila Mariana" required>
+                        </div>
+
+                        <!-- Unidade da Vivência -->
+                        <div class="form-group">
+                            <label for="unidadeVivencia">Unidade da Vivência *</label>
+                            <input type="text" id="unidadeVivencia" placeholder="Ex: Vila Mariana" required>
+                        </div>
+
+                        <!-- Data da Vivência -->
+                        <div class="form-group">
+                            <label for="dataVivencia">Data da Vivência *</label>
+                            <input type="date" id="dataVivencia" required>
+                        </div>
+
+                        <!-- Período do Teste -->
+                        <div class="form-group">
+                            <label for="periodoTeste">Período do Teste *</label>
+                            <input type="text" id="periodoTeste" placeholder="Ex: 08:00 AS 12:00" required>
+                        </div>
+
+                        <!-- Horário da Vaga -->
+                        <div class="form-group col-span-2">
+                            <label for="horarioVaga">Horário da Vaga *</label>
+                            <input type="text" id="horarioVaga" placeholder="Ex: 07:00 às 17:00" required>
+                        </div>
+
+                        <!-- Anamnese -->
+                        <div class="form-group col-span-2">
+                            <label for="anamnese">Anamnese / Observações do Candidato</label>
+                            <textarea id="anamnese" rows="5" placeholder="Digite as observações sobre o histórico, qualificações ou particularidades do candidato..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Coluna 2: Painel de Ações & WhatsApp Preview -->
+            <section class="action-sidebar">
+                <!-- Card de Ações -->
+                <div class="action-card">
+                    <div class="card-title">
+                        <i class="fa-solid fa-bolt"></i>
+                        <h2>Ações Rápidas</h2>
+                    </div>
+                    <p class="action-description">
+                        Gere o PDF para anexar no Google Docs e copie o resumo para o grupo de WhatsApp com 1 clique.
+                    </p>
+
+                    <div class="action-buttons">
+                        <button type="button" id="btnExportPDF" class="btn-action btn-pdf-action">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            Exportar PDF da Vivência
+                        </button>
+
+                        <button type="button" id="btnCopyWhats" class="btn-action btn-whats-action">
+                            <i class="fa-brands fa-whatsapp"></i>
+                            Copiar Texto para WhatsApp
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card de Pré-visualização do WhatsApp -->
+                <div class="preview-card">
+                    <div class="card-title">
+                        <i class="fa-brands fa-whatsapp color-whatsapp"></i>
+                        <h2>Prévia da Mensagem</h2>
+                    </div>
+                    
+                    <div class="whats-chat-box">
+                        <div class="whats-message" id="whatsPreview">
+                            Preencha os campos ao lado para visualizar a mensagem...
+                        </div>
+                    </div>
+                    <small class="whats-hint">
+                        <i class="fa-solid fa-circle-info"></i> Esta mensagem é atualizada automaticamente em tempo real.
+                    </small>
+                </div>
+
+                <!-- Card de Instruções -->
+                <div class="instructions-card">
+                    <h3><i class="fa-solid fa-list-check"></i> Passo a Passo para a Recrutadora</h3>
+                    <ol>
+                        <li>Preencha os dados do candidato (salvo automaticamente).</li>
+                        <li>Clique em <strong>Copiar Texto para WhatsApp</strong> e cole no grupo.</li>
+                        <li>Clique em <strong>Exportar PDF</strong> para baixar o documento formatado.</li>
+                        <li>Abra o Google Docs e anexe o PDF gerado.</li>
+                    </ol>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toastMessage">Mensagem copiada com sucesso!</span>
+    </div>
+
+    <!-- Script do App -->
+    <script src="app.js"></script>
+</body>
+</html>
